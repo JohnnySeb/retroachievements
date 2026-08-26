@@ -31,6 +31,36 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-cyan;
   }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-phosphor);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--color-surface);
+  }
+
+  /* Depuis Chrome 121, declarer scrollbar-width desactive le dimensionnement de
+     ::-webkit-scrollbar : la barre repasserait a ~15px. On reserve donc les
+     proprietes standard aux moteurs sans pseudo-elements webkit, soit Firefox,
+     qui ne sait de toute facon pas descendre sous `thin` ni arrondir le pouce. */
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-phosphor) var(--color-surface);
+    }
+  }
 }
 
 @utility tag {

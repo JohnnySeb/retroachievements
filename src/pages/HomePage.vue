@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PinnedPlayerCard from '@/components/PinnedPlayerCard.vue'
 import SkeletonBlock from '@/components/SkeletonBlock.vue'
 import SystemCard from '@/components/SystemCard.vue'
 import { useApi } from '@/composables/useApi'
@@ -47,6 +48,8 @@ const AWARD_TEXT: Record<string, string> = {
       achievement by achievement.
     </p>
   </section>
+
+  <PinnedPlayerCard class="mt-4" />
 
   <section v-if="home.data.value?.achievementOfTheWeek" class="mt-8">
     <h2 class="font-display text-xl uppercase tracking-wide">Achievement of the week</h2>
