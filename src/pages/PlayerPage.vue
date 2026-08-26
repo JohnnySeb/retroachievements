@@ -1,0 +1,164 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import AwardWall from '@/components/AwardWall.vue'
+import GameProgressCard from '@/components/GameProgressCard.vue'
+import PlayerHero from '@/components/PlayerHero.vue'
+import PlayerStats from '@/components/PlayerStats.vue'
+import SkeletonBlock from '@/components/SkeletonBlock.vue'
+import StaleNotice from '@/components/StaleNotice.vue'
+import StateEmpty from '@/components/StateEmpty.vue'
+import StateError from '@/components/StateError.vue'
+import TabStrip from '@/components/TabStrip.vue'
+import { useApi } from '@/composables/useApi'
+import { formatDate, formatNumber } from '@/lib/format'
+import { badgeUrl } from '@/lib/media'
+import type { PlayerProgressPayload, PlayerSummary, RecentUnlock } from '@/lib/types'
+import { usePinnedPlayerStore } from '@/stores/usePinnedPlayerStore'
+
+const props = defineProps<{ username: string }>()
+
+const pinned = usePinnedPlayerStore()
+const activeTab = ref('games')
+
+const TABS = [
+  { value: 'games', label: 'Games' },
+  { value: 'recent', label: 'Activity' },
+  { value: 'achievements', label: 'Achievements' },
+  { value: 'awards', label: 'Awards' },
+]
+
+const summary = useApi<PlayerSummary>(() => `/api/users/${encodeURIComponent(props.username)}`)
+const progress = useApi<PlayerProgressPayload>(
+  () => `/api/users/${encodeURIComponent(props.username)}/progress`,
+)
+const recent = useApi<RecentUnlock[]>(
+  () => `/api/users/${encodeURIComponent(props.username)}/recent`,
+)
+
+const playedGames = computed(() => progress.data.value?.results ?? [])
+const masteries = computed(
+  () => playedGames.value.filter((game) => game.highestAwardKind === 'mastered').length,
+)
+
+const isPinned = computed(() => pinned.username?.toLowerCase() === props.username.toLowerCase())
+</script>
+
+<template>
+  <div v-if="summary.pending.value" class="grid grid-cols-1 gap-3">
+    <SkeletonBlock height="140px" />
+    <SkeletonBlock height="90px" />
+    <SkeletonBlock v-for="n in 4" :key="n" height="76px" />
+  </div>
+
+  <StateError
+    v-else-if="summary.error.value"
+    :message="
+      summary.error.value.status === 404 ? 'This player does not exist.' : summary.error.value.message
+    "
+    @retry="summary.reload()"
+  />
+
+  <template v-else-if="summary.data.value">
+    <PlayerHero :profile="summary.data.value.profile" />
+    <StaleNotice class="mt-2" :fetched-at="summary.stale.value" />
+
+    <button
+      type="button"
+      class="mt-3 min-h-11 w-full border px-4 font-display uppercase tracking-wider sm:w-auto"
+      :class="isPinned ? 'border-edge bg-raised text-muted' : 'border-phosphor bg-phosphor text-bg'"
+      @click="isPinned ? pinned.unpin() : pinned.pin(username)"
+    >
+      {{ isPinned ? 'Unpin' : 'Pin this player' }}
+    </button>
+
+    <PlayerStats
+      class="mt-4"
+      :profile="summary.data.value.profile"
+      :games-played="progress.data.value?.total ?? 0"
+      :masteries="masteries"
+    />
+
+    <TabStrip v-model="activeTab" class="mt-6" :tabs="TABS" />
+
+    <section v-if="activeTab === 'games'" class="mt-4">
+      <div v-if="progress.pending.value" class="grid grid-cols-1 gap-2">
+        <SkeletonBlock v-for="n in 5" :key="n" height="76px" />
+      </div>
+      <StateEmpty v-else-if="!playedGames.length" title="No games played" />
+      <template v-else>
+        <p v-if="progress.data.value && progress.data.value.total > playedGames.length" class="num mb-3 text-xs text-muted">
+          Showing {{ playedGames.length }} of {{ formatNumber(progress.data.value.total) }} —
+          the API caps this list at 500 entries.
+        </p>
+        <ul class="grid grid-cols-1 gap-2">
+          <li v-for="game in playedGames" :key="game.gameId">
+            <GameProgressCard :game="game" />
+          </li>
+        </ul>
+      </template>
+    </section>
+
+    <section v-else-if="activeTab === 'recent'" class="mt-4">
+      <StateEmpty v-if="!summary.data.value.recentGames.length" title="No recent activity" />
+      <ul v-else class="grid grid-cols-1 gap-2">
+        <li v-for="game in summary.data.value.recentGames" :key="game.gameId">
+          <GameProgressCard :game="game" />
+        </li>
+      </ul>
+    </section>
+
+    <section v-else-if="activeTab === 'achievements'" class="mt-4">
+      <div v-if="recent.pending.value" class="grid grid-cols-1 gap-2">
+        <SkeletonBlock v-for="n in 5" :key="n" height="76px" />
+      </div>
+      <StateEmpty
+        v-else-if="!recent.data.value?.length"
+        title="No unlocks"
+        hint="The API only reports the last seven days."
+      />
+      <ul v-else class="grid grid-cols-1 gap-2">
+        <li
+          v-for="unlock in recent.data.value"
+          :key="`${unlock.id}-${unlock.dateEarned}`"
+          class="flex items-center gap-3 border border-l-[3px] border-edge bg-surface p-3"
+          :class="unlock.dateEarnedHardcore ? 'border-l-phosphor' : 'border-l-amber'"
+        >
+          <img
+            :src="badgeUrl(unlock.badgeName, true)"
+            :alt="`Badge: ${unlock.title}`"
+            width="48"
+            height="48"
+            loading="lazy"
+            class="is-pixel size-12 shrink-0 border border-edge"
+          />
+          <span class="min-w-0 flex-1">
+            <span class="block truncate font-display text-base">{{ unlock.title }}</span>
+            <RouterLink
+              :to="{ name: 'game', params: { gameId: unlock.gameId } }"
+              class="block truncate text-xs text-muted"
+            >
+              {{ unlock.gameTitle }}
+            </RouterLink>
+            <span class="num block text-[11px] text-muted">
+              {{ formatDate(unlock.dateEarned) }}
+              · {{ unlock.dateEarnedHardcore ? 'HARDCORE' : 'SOFTCORE' }}
+            </span>
+          </span>
+          <span class="num shrink-0 text-sm font-bold text-amber">{{ unlock.points }}</span>
+        </li>
+      </ul>
+    </section>
+
+    <section v-else class="mt-4">
+      <StateEmpty v-if="!summary.data.value.awards.length" title="No awards" />
+      <template v-else>
+        <p class="num mb-3 text-xs text-muted">
+          Showing {{ summary.data.value.awards.length }} of
+          {{ formatNumber(summary.data.value.awardsTotal) }} — most recent first.
+        </p>
+        <AwardWall :awards="summary.data.value.awards" />
+      </template>
+    </section>
+  </template>
+</template>

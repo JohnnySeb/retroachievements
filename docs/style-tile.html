@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planche de style — Refonte RetroAchievements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0C10; --surface:#12161D; --raised:#1A1F28; --border:#232A35;
+  --text:#E6EAF0; --muted:#8A94A6;
+  --phosphor:#3DFF9E; --amber:#FFB627; --magenta:#FF3D81; --cyan:#4CC9F0;
+  --font-display:"Barlow Condensed",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --font-pixel:"Press Start 2P",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+.pixel{image-rendering:pixelated;image-rendering:crisp-edges}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+
+/* micro-label pixel — jamais plus de 2-3 mots */
+.tag{font-family:var(--font-pixel);font-size:8px;line-height:1;letter-spacing:.04em;text-transform:uppercase}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* ---------- barre de nav ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(10,12,16,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.topbar-in{max-width:1180px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:32px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+.logo-mark{width:26px;height:26px;display:grid;place-items:center;background:var(--phosphor);color:#04120A;font-family:var(--font-pixel);font-size:10px;box-shadow:3px 3px 0 rgba(61,255,158,.22)}
+.nav{display:flex;gap:26px;font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.nav a{color:var(--muted);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent}
+.nav a.is-active,.nav a:hover{color:var(--text);border-bottom-color:var(--phosphor)}
+.searchbtn{margin-left:auto;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:8px 12px;min-width:260px;font:inherit;font-size:14px;cursor:pointer}
+.searchbtn:hover{border-color:#313a48;color:var(--text)}
+.kbd{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--border);background:var(--raised);padding:2px 6px}
+
+/* ---------- sections ---------- */
+section{margin-top:72px}
+.sec-head{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.sec-head .tag{color:var(--phosphor)}
+.sec-head h2{font-family:var(--font-display);font-size:26px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.sec-head .rule{flex:1;height:1px;background:var(--border)}
+.note{color:var(--muted);font-size:13.5px;max-width:70ch;margin-top:-8px;margin-bottom:24px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;border:1px solid var(--border);overflow:hidden}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(18px) saturate(.7) brightness(.34);transform:scale(1.15)}
+.hero-scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.055) 0 1px,transparent 1px 3px)}
+.hero-in{position:relative;display:flex;gap:26px;padding:26px;align-items:flex-end}
+.boxart{width:132px;flex:none;border:1px solid var(--border);box-shadow:5px 5px 0 rgba(0,0,0,.55)}
+.hero-meta{flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:rgba(18,22,29,.82);padding:4px 9px;font-size:12px;color:var(--muted)}
+.chip .tag{color:var(--cyan)}
+h1.game{font-family:var(--font-display);font-size:44px;font-weight:700;line-height:1.02;letter-spacing:.01em;margin:12px 0 10px}
+.metarow{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--muted);font-size:13.5px}
+.metarow b{color:var(--text);font-weight:500}
+
+/* ---------- barre de progression maîtresse ---------- */
+.progbar{border:1px solid var(--border);border-top:0;background:var(--surface);padding:16px 26px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.track{flex:1;min-width:220px;height:12px;background:#0A0D12;border:1px solid var(--border);position:relative;overflow:hidden}
+.fill-hc{position:absolute;inset:0 auto 0 0;width:46%;background:var(--phosphor)}
+.fill-sc{position:absolute;inset:0 auto 0 46%;width:17%;background:var(--amber);opacity:.85}
+.prognum{font-family:var(--font-mono);font-size:22px;font-weight:700}
+
+/* ---------- cartes achievement ---------- */
+.ach-grid{display:grid;gap:12px}
+.ach{display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--border);border-left-width:3px;padding:14px 16px;position:relative}
+.ach--hc{border-left-color:var(--phosphor)}
+.ach--sc{border-left-color:var(--amber)}
+.ach--locked{border-left-color:#2C3441;background:#0E1116}
+.ach-badge{width:64px;height:64px;flex:none;border:1px solid var(--border)}
+.ach--locked .ach-badge{filter:brightness(.8)}
+.ach-body{flex:1;min-width:0}
+.ach-title{font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.ach--locked .ach-title{color:var(--muted)}
+.ach-desc{color:var(--muted);font-size:13.5px;margin-top:1px}
+.ach-foot{display:flex;align-items:center;gap:14px;margin-top:9px;font-size:12px;color:var(--muted)}
+.rarity{flex:1;max-width:190px;height:4px;background:#0A0D12;border:1px solid var(--border);position:relative}
+.rarity i{position:absolute;inset:0 auto 0 0;display:block;background:var(--magenta)}
+.pts{font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--amber);flex:none;text-align:right}
+.pts small{display:block;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:.06em}
+.state{padding:2px 6px;border:1px solid currentColor}
+.state--hc{color:var(--phosphor)}
+.state--sc{color:var(--amber)}
+.state--locked{color:#5C6675}
+.type{color:var(--cyan);border-color:#1F3D4C;background:rgba(76,201,240,.08)}
+
+/* ---------- palette ---------- */
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.sw{border:1px solid var(--border);background:var(--surface)}
+.sw .chipcolor{height:76px}
+.sw .info{padding:10px 12px}
+.sw .name{font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.sw .hex{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:2px}
+.sw .ratio{font-family:var(--font-mono);font-size:11px;color:var(--phosphor);margin-top:6px}
+
+/* ---------- stats joueur ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)}
+.stat{background:var(--surface);padding:16px 18px}
+.stat .tag{color:var(--muted)}
+.stat .v{font-family:var(--font-mono);font-size:28px;font-weight:700;line-height:1.1;margin-top:9px}
+.v--ph{color:var(--phosphor)} .v--am{color:var(--amber)} .v--mg{color:var(--magenta)}
+
+/* ---------- typo ---------- */
+.type-row{display:flex;gap:22px;align-items:baseline;border-bottom:1px solid var(--border);padding:16px 0;flex-wrap:wrap}
+.type-row .role{width:170px;flex:none;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.09em}
+
+/* ---------- palette de recherche ---------- */
+.cmd{border:1px solid var(--border);background:var(--surface);box-shadow:6px 6px 0 rgba(0,0,0,.5);max-width:620px}
+.cmd-input{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border);font-size:17px;color:var(--muted)}
+.cmd-group{padding:10px 0}
+.cmd-group>.tag{color:var(--muted);padding:0 18px 8px;display:block}
+.cmd-row{display:flex;align-items:center;gap:12px;padding:8px 18px}
+.cmd-row.sel{background:var(--raised);box-shadow:inset 3px 0 0 var(--phosphor)}
+.cmd-row img{width:32px;height:32px;border:1px solid var(--border)}
+.cmd-row .t{font-size:14.5px}
+.cmd-row .s{font-size:12px;color:var(--muted)}
+.cmd-row .r{margin-left:auto;font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
+
+/* ---------- boutons ---------- */
+.btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:9px 18px;border:1px solid var(--border);background:var(--raised);color:var(--text);cursor:pointer}
+.btn--primary{background:var(--phosphor);color:#04120A;border-color:var(--phosphor);box-shadow:4px 4px 0 rgba(61,255,158,.24)}
+.btn--ghost{background:transparent;color:var(--muted)}
+.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.f{font-size:12.5px;padding:6px 12px;border:1px solid var(--border);color:var(--muted);background:var(--surface)}
+.f.on{color:#04120A;background:var(--phosphor);border-color:var(--phosphor)}
+
+.caption{color:var(--muted);font-size:12.5px;margin-top:10px}
+@media(max-width:720px){
+  .nav,.searchbtn{display:none}
+  .hero-in{flex-direction:column;align-items:flex-start}
+  h1.game{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <span class="logo"><span class="logo-mark">RA</span>RetroAchievements</span>
+    <nav class="nav">
+      <a href="#" class="is-active">Accueil</a>
+      <a href="#">Consoles</a>
+      <a href="#">Classements</a>
+    </nav>
+    <button class="searchbtn">Rechercher un jeu, un joueur… <span class="kbd">⌘K</span></button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section style="margin-top:44px">
+    <div class="sec-head"><span class="tag">01</span><h2>Fiche jeu — hero</h2><span class="rule"></span></div>
+    <p class="note">Screenshot in-game flouté en fond, box art nette par-dessus, scanlines à 3 % — sur le hero uniquement, jamais derrière du texte courant. La barre de progression maîtresse passe sous le hero : c'est la première chose qu'un joueur cherche.</p>
+
+    <div class="hero">
+      <div class="hero-bg" style="background-image:url('https://media.retroachievements.org/Images/000010.png')"></div>
+      <div class="hero-scan" aria-hidden="true"></div>
+      <div class="hero-in">
+        <img class="boxart pixel" src="https://media.retroachievements.org/Images/112941.png" alt="Jaquette de Sonic the Hedgehog">
+        <div class="hero-meta">
+          <span class="chip"><span class="tag">Genesis</span> Mega Drive</span>
+          <h1 class="game">Sonic the Hedgehog</h1>
+          <div class="metarow">
+            <span>Développeur <b>Sonic Team</b></span>
+            <span>Éditeur <b>Sega</b></span>
+            <span>Genre <b>2D Platforming</b></span>
+            <span>Sortie <b>11 juin 1991</b></span>
+            <span><b class="mono">60 727</b> joueurs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="progbar">
+      <span class="tag" style="color:var(--muted)">Progression</span>
+      <span class="prognum" style="color:var(--phosphor)">22<span style="color:var(--muted);font-weight:400">/35</span></span>
+      <div class="track"><i class="fill-hc"></i><i class="fill-sc"></i></div>
+      <span class="mono" style="font-size:12px;color:var(--muted)">
+        <span style="color:var(--phosphor)">■</span> 16 hardcore · 46 %
+        &nbsp; <span style="color:var(--amber)">■</span> 6 softcore · 17 %
+      </span>
+    </div>
+    <p class="caption">Données réelles : jeu #1, 35 achievements, 60 727 joueurs distincts. La progression 22/35 est illustrative — aucun joueur n'est épinglé sur cette planche.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">02</span><h2>Achievements — les 3 états</h2><span class="rule"></span></div>
+    <p class="note">Le point faible du site actuel : verrouillé, softcore et hardcore ne se distinguent pas. Ici, trois signaux redondants — liseré coloré, badge désaturé quand verrouillé, étiquette texte. La couleur ne porte jamais seule l'information.</p>
+
+    <div class="filters" style="margin-bottom:16px">
+      <span class="f on">Tous · 35</span>
+      <span class="f">Débloqués · 16</span>
+      <span class="f">Verrouillés · 19</span>
+      <span class="f">Progression</span>
+      <span class="f">Win condition</span>
+      <span class="f">Missable</span>
+    </div>
+
+    <div class="ach-grid">
+      <div class="ach ach--hc">
+        <img class="ach-badge pixel" src="https://media.retroachievements.org/Badge/250336.png" alt="Badge : That Was Easy">
+        <div class="ach-body">
+          <div class="ach-title">That Was Easy <span class="tag state type">Progression</span></div>
+          <div class="ach-desc">Complete the first act of Green Hill Zone.</div>
+          <div class="ach-foot">
+            <span class="tag state state--hc">Hardcore</span>
+            <span class="mono">90.2 % des joueurs</span>
+            <span class="rarity"><i style="width:90.2%"></i></span>
+            <span class="mono">TrueRatio 3</span>
+          </div>
+        </div>
+        <div class="pts">3<small>PTS</small></div>
+      </div>
+
+      <div class="ach ach--sc">
+        <img class="ach-badge pixel" src="https://media.retroachievements.org/Badge/250352.png" alt="Badge : Newbie Collector">
+        <div class="ach-body">
+          <div class="ach-title">Newbie Collector</div>
+          <div class="ach-desc">Hold 20 rings.</div>
+          <div class="ach-foot">
+            <span class="tag state state--sc">Softcore</span>
+            <span class="mono">99.5 % des joueurs</span>
+            <span class="rarity"><i style="width:99.5%"></i></span>
+            <span class="mono">TrueRatio 2</span>
+          </div>
+        </div>
+        <div class="pts">2<small>PTS</small></div>
+      </div>
+
+      <div class="ach ach--locked">
+        <img class="ach-badge pixel" src="https://media.retroachievements.org/Badge/461376_lock.png" alt="Badge verrouillé : Got Them All">
+        <div class="ach-body">
+          <div class="ach-title">Got Them All</div>
+          <div class="ach-desc">Collect all 6 Chaos Emeralds.</div>
+          <div class="ach-foot">
+            <span class="tag state state--locked">Locked</span>
+            <span class="mono" style="color:var(--magenta)">10.3 % — rare</span>
+            <span class="rarity"><i style="width:10.3%"></i></span>
+            <span class="mono">TrueRatio 97</span>
+          </div>
+        </div>
+        <div class="pts">25<small>PTS</small></div>
+      </div>
+
+      <div class="ach ach--locked">
+        <img class="ach-badge pixel" src="https://media.retroachievements.org/Badge/563388_lock.png" alt="Badge verrouillé : Breaking Through Your Crazy Maze">
+        <div class="ach-body">
+          <div class="ach-title">Breaking Through Your Crazy Maze</div>
+          <div class="ach-desc">Collect all 5 hidden Emblems in Star Light Zone Act 1 before the victory fanfare.</div>
+          <div class="ach-foot">
+            <span class="tag state state--locked">Locked</span>
+            <span class="mono" style="color:var(--magenta)">3.8 % — très rare</span>
+            <span class="rarity"><i style="width:3.8%"></i></span>
+            <span class="mono">TrueRatio 15</span>
+          </div>
+        </div>
+        <div class="pts">2<small>PTS</small></div>
+      </div>
+    </div>
+    <p class="caption">Badges réels servis depuis media.retroachievements.org, rendus en <code>image-rendering: pixelated</code>. Les variantes verrouillées utilisent le fichier <code>_lock</code> de l'API.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">03</span><h2>Palette de recherche ⌘K</h2><span class="rule"></span></div>
+    <p class="note">La réponse principale au reproche de navigation : un seul champ, résultats groupés par type, navigation clavier complète. La barre du haut tombe à trois entrées.</p>
+    <div class="cmd">
+      <div class="cmd-input"><span class="mono" style="color:var(--phosphor)">&gt;</span> sonic<span style="color:var(--phosphor)">▊</span></div>
+      <div class="cmd-group">
+        <span class="tag">Jeux</span>
+        <div class="cmd-row sel">
+          <img class="pixel" src="https://media.retroachievements.org/Images/085573.png" alt="">
+          <div><div class="t">Sonic the Hedgehog</div><div class="s">Genesis/Mega Drive</div></div>
+          <span class="r">35 ach · 300 pts</span>
+        </div>
+        <div class="cmd-row">
+          <img class="pixel" src="https://media.retroachievements.org/Images/121647.png" alt="">
+          <div><div class="t">Sonic the Hedgehog 2</div><div class="s">Genesis/Mega Drive</div></div>
+          <span class="r">32 ach · 420 pts</span>
+        </div>
+      </div>
+      <div class="cmd-group" style="border-top:1px solid var(--border)">
+        <span class="tag">Joueur — pseudo exact</span>
+        <div class="cmd-row">
+          <img class="pixel" src="https://media.retroachievements.org/UserPic/MaxMilyin.png" alt="">
+          <div><div class="t">MaxMilyin</div><div class="s">Rang 1 · membre depuis 2016</div></div>
+          <span class="r">491 867 pts</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">04</span><h2>Profil joueur — statistiques</h2><span class="rule"></span></div>
+    <p class="note">Chiffres en monospace : c'est ce qui produit la lecture « terminal » et ce qui aligne les colonnes. Données réelles de MaxMilyin via <code>API_GetUserProfile</code>.</p>
+    <div class="stats">
+      <div class="stat"><span class="tag">Points HC</span><div class="v v--ph">491 867</div></div>
+      <div class="stat"><span class="tag">Softcore</span><div class="v v--am">0</div></div>
+      <div class="stat"><span class="tag">True points</span><div class="v">2 669 943</div></div>
+      <div class="stat"><span class="tag">Jeux</span><div class="v">1 629</div></div>
+      <div class="stat"><span class="tag">Maitrises</span><div class="v v--mg">1 204</div></div>
+    </div>
+    <p class="caption">Le nombre de maîtrises est illustratif — il vient de <code>API_GetUserAwards</code>, non appelé pour cette planche.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">05</span><h2>Palette</h2><span class="rule"></span></div>
+    <p class="note">Contrastes calculés sur la surface <code>#12161D</code>. Toutes les paires passent WCAG AA en texte normal.</p>
+    <div class="sw-grid">
+      <div class="sw"><div class="chipcolor" style="background:#0A0C10;border-bottom:1px solid var(--border)"></div><div class="info"><div class="name">Fond</div><div class="hex">#0A0C10</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#12161D;border-bottom:1px solid var(--border)"></div><div class="info"><div class="name">Surface</div><div class="hex">#12161D</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#232A35"></div><div class="info"><div class="name">Bordure</div><div class="hex">#232A35</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#E6EAF0"></div><div class="info"><div class="name">Texte</div><div class="hex">#E6EAF0</div><div class="ratio">15.02:1</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#8A94A6"></div><div class="info"><div class="name">Secondaire</div><div class="hex">#8A94A6</div><div class="ratio">5.93:1</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#3DFF9E"></div><div class="info"><div class="name">Phosphore</div><div class="hex">#3DFF9E</div><div class="ratio">13.81:1</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#FFB627"></div><div class="info"><div class="name">Ambre</div><div class="hex">#FFB627</div><div class="ratio">10.34:1</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#FF3D81"></div><div class="info"><div class="name">Magenta</div><div class="hex">#FF3D81</div><div class="ratio">5.38:1</div></div></div>
+      <div class="sw"><div class="chipcolor" style="background:#4CC9F0"></div><div class="info"><div class="name">Cyan</div><div class="hex">#4CC9F0</div><div class="ratio">9.43:1</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">06</span><h2>Typographie</h2><span class="rule"></span></div>
+    <div class="type-row"><span class="role">Titres</span><span style="font-family:var(--font-display);font-size:34px;font-weight:700;letter-spacing:.01em">Sonic the Hedgehog 2</span><span class="caption">Barlow Condensed 700</span></div>
+    <div class="type-row"><span class="role">Corps</span><span style="font-size:15px">Complete the first act of Green Hill Zone.</span><span class="caption">Inter 400</span></div>
+    <div class="type-row"><span class="role">Données</span><span class="mono" style="font-size:22px;font-weight:700">491 867 · 46.18 % · 2 669 943</span><span class="caption">JetBrains Mono — chiffres tabulaires</span></div>
+    <div class="type-row" style="border:0"><span class="role">Micro-labels</span><span class="tag" style="font-size:11px;color:var(--phosphor)">HARDCORE&nbsp;&nbsp;MASTERED&nbsp;&nbsp;25 PTS</span><span class="caption">Press Start 2P — 2 à 3 mots maximum, jamais de texte courant</span></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">07</span><h2>Contrôles</h2><span class="rule"></span></div>
+    <p class="note">Ombres dures décalées de 4 px, pas de flou : ça lit « borne d'arcade » plutôt que material design. Focus visible en cyan sur toutes les cibles.</p>
+    <div class="btns">
+      <button class="btn btn--primary">Épingler ce joueur</button>
+      <button class="btn">Comparer</button>
+      <button class="btn btn--ghost">Forum</button>
+      <span class="chip"><span class="tag">Mastered</span></span>
+      <span class="chip"><span class="tag" style="color:var(--amber)">Beaten</span></span>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

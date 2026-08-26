@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0A0C10;
+  --color-surface: #12161D;
+  --color-raised: #1A1F28;
+  --color-edge: #232A35;
+  --color-ink: #E6EAF0;
+  --color-muted: #8A94A6;
+  --color-phosphor: #3DFF9E;
+  --color-amber: #FFB627;
+  --color-magenta: #FF3D81;
+  --color-cyan: #4CC9F0;
+
+  --font-display: "Barlow Condensed", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-pixel: "Press Start 2P", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-body antialiased;
+  }
+
+  /* Le lissage par defaut du navigateur detruit le pixel art des badges RA. */
+  .is-pixel {
+    image-rendering: pixelated;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-cyan;
+  }
+}
+
+@utility tag {
+  @apply font-pixel text-[8px] leading-none uppercase tracking-wide;
+}
+
+@utility num {
+  @apply font-mono tabular-nums;
+}
+
+/* Un raccourci clavier n'a aucun sens sans clavier. */
+@media (pointer: coarse) {
+  .kbd-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanlines {
+    display: none;
+  }
+
+  .animate-pulse {
+    animation: none;
+  }
+}
