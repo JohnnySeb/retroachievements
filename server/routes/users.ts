@@ -18,9 +18,9 @@ interface RaAward {
   AwardType: string
   AwardData: number
   AwardDataExtra: number
-  Title: string
-  ConsoleName: string
-  ImageIcon: string
+  Title: string | null
+  ConsoleName: string | null
+  ImageIcon: string | null
 }
 
 interface RaRecentGame {
@@ -83,15 +83,19 @@ usersRoutes.get('/users/:user', async (context) => {
       .slice()
       .sort((a, b) => b.AwardedAt.localeCompare(a.AwardedAt))
       .slice(0, MAX_AWARDS)
-      .map((entry) => ({
-      awardedAt: entry.AwardedAt,
-      awardType: entry.AwardType,
-      title: entry.Title,
-      systemName: entry.ConsoleName,
-      iconPath: entry.ImageIcon,
-      isHardcore: entry.AwardDataExtra === 1,
-      gameId: entry.AwardData,
-    }))
+      .map((entry): PlayerAward => {
+        const gameId = entry.AwardData > 0 ? entry.AwardData : null
+        return {
+          awardedAt: entry.AwardedAt,
+          awardType: entry.AwardType,
+          title: entry.Title ?? entry.AwardType,
+          systemName: entry.ConsoleName ?? null,
+          iconPath: entry.ImageIcon ?? null,
+          // AwardDataExtra vaut aussi 2 sur les evenements : seul 1 signifie hardcore.
+          isHardcore: gameId !== null && entry.AwardDataExtra === 1,
+          gameId,
+        }
+      })
 
     const recentGames: PlayerGameProgress[] = (recentRaw ?? []).map((entry) => ({
       gameId: entry.GameID,

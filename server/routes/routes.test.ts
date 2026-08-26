@@ -214,6 +214,43 @@ describe('internal routes', () => {
     expect(body.recentGames[0].numAwardedHardcore).toBe(16)
   })
 
+  it('GET /api/users/:user maps a site award that has no game', async () => {
+    mockRa({
+      GetUserProfile: {
+        User: 'MaxMilyin', ULID: 'X', UserPic: '/UserPic/MaxMilyin.png',
+        MemberSince: '2016-01-02 00:43:04', RichPresenceMsg: 'Unknown', LastGameID: 0,
+        TotalPoints: 1, TotalSoftcorePoints: 0, TotalTruePoints: 1, Motto: '',
+      },
+      GetUserAwards: {
+        VisibleUserAwards: [
+          // Forme reelle d'un Certified Legend : ni titre, ni console, ni icone.
+          {
+            AwardedAt: '2024-12-22T21:43:11+00:00', AwardType: 'Certified Legend',
+            AwardData: 0, AwardDataExtra: 0, Title: null, ConsoleName: null, ImageIcon: null,
+          },
+          // AwardDataExtra vaut 2 sur certains evenements : ce n'est pas du hardcore.
+          {
+            AwardedAt: '2024-04-12T21:32:40+00:00', AwardType: 'Event',
+            AwardData: 139, AwardDataExtra: 2, Title: 'On the Horizon',
+            ConsoleName: 'Events', ImageIcon: '/Images/088982.png',
+          },
+        ],
+      },
+      GetUserRecentlyPlayedGames: [],
+    })
+
+    const response = await createApp().request('/api/users/MaxMilyin')
+    const body = await response.json()
+    const [event, legend] = body.awards
+
+    expect(legend.gameId).toBeNull()
+    expect(legend.title).toBe('Certified Legend')
+    expect(legend.iconPath).toBeNull()
+    expect(legend.isHardcore).toBe(false)
+    expect(event.gameId).toBe(139)
+    expect(event.isHardcore).toBe(false)
+  })
+
   it('GET /api/users/:user returns 404 for an unknown player', async () => {
     mockRa({ GetUserProfile: {} })
 

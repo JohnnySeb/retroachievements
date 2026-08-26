@@ -84,10 +84,12 @@ export interface PlayerAward {
   awardedAt: string
   awardType: string
   title: string
-  systemName: string
-  iconPath: string
+  // Les awards de site (Certified Legend, Patreon Supporter) n'ont ni jeu,
+  // ni console, ni icone : l'API renvoie null et AwardData vaut 0.
+  systemName: string | null
+  iconPath: string | null
   isHardcore: boolean
-  gameId: number
+  gameId: number | null
 }
 
 export interface PlayerGameProgress {
