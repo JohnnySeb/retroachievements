@@ -4,6 +4,7 @@ import type { PlayerProfile, SearchResults } from '../../src/lib/types'
 import { TTL, cached } from '../cache'
 import { type RaUserProfile, normalizePlayerProfile } from '../normalize'
 import { fetchRaOrNull } from '../ra-client'
+import { getRefreshState } from '../index-refresh'
 import { getIndexStatus, searchGames, searchSystems } from '../search-index'
 import { loadSystems } from './systems'
 
@@ -25,7 +26,16 @@ searchRoutes.get('/search', async (context) => {
 
   const status = getIndexStatus()
   if (!status.ready) {
-    return context.json({ status: 'indexing', total: status.total }, 503)
+    const refresh = getRefreshState()
+    return context.json(
+      {
+        status: 'indexing',
+        error: refresh.lastError ?? 'Building the game search index',
+        done: refresh.done,
+        systems: refresh.total,
+      },
+      503,
+    )
   }
 
   const [player, systems] = await Promise.all([findPlayer(query), loadSystems()])

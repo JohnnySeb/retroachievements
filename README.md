@@ -60,6 +60,52 @@ npm run start
 
 Un seul process Node sert `dist/` et `/api` sur `:3001`.
 
+## Domaine local (.test)
+
+Ce projet n'a **pas de docroot à servir en statique**. Un serveur de fichiers classique — Valet,
+Herd, `php -S` — renvoie `src/main.ts` avec le type MIME `video/mp2t`, car l'extension `.ts` est
+enregistrée pour MPEG Transport Stream. Le navigateur refuse le module et la page reste blanche.
+Corriger le type MIME ne suffirait pas : le fichier reste du TypeScript avec des imports nus que
+le navigateur ne sait pas résoudre.
+
+Pour utiliser un domaine `.test`, il faut proxifier vers le serveur, pas servir le dossier :
+
+```bash
+valet proxy retroachievements http://localhost:5173
+```
+
+Pointez sur `:5173` pour développer avec le rechargement à chaud, ou sur `:3001` pour tester le
+build de production. Sur Herd, la même chose se configure dans l'onglet Sites.
+
+## Déploiement
+
+Le fichier [`render.yaml`](render.yaml) décrit le service. Sur Render : *New → Blueprint*, pointez
+sur le dépôt, puis renseignez `RA_API_KEY` dans les variables d'environnement — elle est marquée
+`sync: false` et n'est donc jamais versionnée.
+
+Un **process persistant est requis**, pas du serverless. Le cache est une `Map` en mémoire de
+process ; sur des fonctions serverless, chaque démarrage à froid repartirait d'un cache vide et
+refrapperait l'API RetroAchievements, ce que sa documentation demande explicitement d'éviter.
+
+Le serveur n'écrit rien sur disque au service des requêtes, donc aucun disque persistant payant
+n'est nécessaire.
+
+### Fraîcheur des données une fois en ligne
+
+Les données se rafraîchissent seules dans la limite des durées de vie du cache : 5 min pour un
+profil joueur, 15 min pour l'accueil et les classements, 1 h pour une fiche de jeu, 24 h pour les
+listes de consoles et de jeux.
+
+L'index de recherche, lui, est reconstruit **par le serveur lui-même** : au démarrage s'il est
+absent, puis toutes les 24 h. Aucun redéploiement n'est nécessaire pour que les nouveaux jeux
+deviennent trouvables.
+
+Conséquence sur l'offre gratuite de Render : le système de fichiers est éphémère et le service
+s'endort après inactivité. L'index disparaît donc à chaque réveil et se reconstruit — environ
+21 secondes pendant lesquelles `/api/search` répond 503 avec un état « Search index not built »
+explicite et sa progression. Le reste du site fonctionne normalement pendant ce temps. Sur une
+offre payante, le service reste éveillé et l'index n'est reconstruit qu'une fois par jour.
+
 ## Tests
 
 ```bash

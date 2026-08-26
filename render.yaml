@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: retroachievements
+    runtime: node
+    plan: free
+    branch: main
+    # --include=dev est explicite : vite et vue-tsc sont des devDependencies et
+    # plusieurs hebergeurs posent NODE_ENV=production, ce qui les omettrait.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: RA_API_KEY
+        sync: false
+      - key: NODE_VERSION
+        value: "22"
