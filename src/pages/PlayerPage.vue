@@ -11,6 +11,7 @@ import StaleNotice from '@/components/StaleNotice.vue'
 import StateEmpty from '@/components/StateEmpty.vue'
 import StateError from '@/components/StateError.vue'
 import TabStrip from '@/components/TabStrip.vue'
+import UnpinButton from '@/components/UnpinButton.vue'
 import { useApi } from '@/composables/useApi'
 import { formatDate, formatNumber, formatPercent } from '@/lib/format'
 import { badgeUrl, mediaUrl } from '@/lib/media'
@@ -78,14 +79,17 @@ const isPinned = computed(() => pinned.username?.toLowerCase() === props.usernam
     <PlayerHero :profile="summary.data.value.profile" />
     <StaleNotice class="mt-2" :fetched-at="summary.stale.value" />
 
-    <button
-      type="button"
-      class="mt-3 min-h-11 w-full border px-4 font-display uppercase tracking-wider sm:w-auto"
-      :class="isPinned ? 'border-edge bg-raised text-muted' : 'border-phosphor bg-phosphor text-bg'"
-      @click="isPinned ? pinned.unpin() : pinned.pin(username)"
-    >
-      {{ isPinned ? 'Unpin' : 'Pin this player' }}
-    </button>
+    <div class="mt-3">
+      <UnpinButton v-if="isPinned" :username="username" @confirm="pinned.unpin()" />
+      <button
+        v-else
+        type="button"
+        class="min-h-11 w-full border border-phosphor bg-phosphor px-4 font-display uppercase tracking-wider text-bg sm:w-auto"
+        @click="pinned.pin(username)"
+      >
+        Pin this player
+      </button>
+    </div>
 
     <PlayerStats
       class="mt-4"

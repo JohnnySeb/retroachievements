@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import UnpinButton from '@/components/UnpinButton.vue'
 import { useApi } from '@/composables/useApi'
 import { formatNumber } from '@/lib/format'
 import { mediaUrl } from '@/lib/media'
@@ -49,21 +50,14 @@ const profile = computed(() => data.value?.profile ?? null)
       </p>
     </div>
 
-    <div class="flex shrink-0 gap-2">
+    <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
       <RouterLink
         :to="{ name: 'player', params: { username: pinned.username } }"
         class="flex min-h-11 flex-1 items-center justify-center border border-phosphor bg-phosphor px-4 font-display uppercase tracking-wider text-bg sm:flex-none"
       >
         Go to this profile
       </RouterLink>
-      <button
-        type="button"
-        data-unpin
-        class="min-h-11 shrink-0 border border-edge bg-raised px-3 font-display uppercase tracking-wider text-muted"
-        @click="pinned.unpin()"
-      >
-        Unpin
-      </button>
+      <UnpinButton :username="pinned.username" @confirm="pinned.unpin()" />
     </div>
   </section>
 </template>

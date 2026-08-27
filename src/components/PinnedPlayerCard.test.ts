@@ -99,7 +99,7 @@ describe('PinnedPlayerCard', () => {
     expect(wrapper.text()).toContain('Go to this profile')
   })
 
-  it('lets the player be unpinned', async () => {
+  it('requires a confirmation before unpinning', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify(PROFILE), { status: 200 }),
     )
@@ -108,8 +108,11 @@ describe('PinnedPlayerCard', () => {
 
     const wrapper = mountCard()
     await settle()
-    await wrapper.get('[data-unpin]').trigger('click')
 
+    await wrapper.get('[data-unpin]').trigger('click')
+    expect(store.username).toBe('MaxMilyin')
+
+    await wrapper.get('[data-unpin-confirm]').trigger('click')
     expect(store.username).toBeNull()
     expect(localStorage.getItem('ra:pinned-player')).toBeNull()
   })
