@@ -191,6 +191,7 @@ describe('internal routes', () => {
           },
         ],
       },
+      GetUserCompletionProgress: { Total: 1629 },
       GetUserRecentlyPlayedGames: [
         {
           GameID: 1,
@@ -212,6 +213,7 @@ describe('internal routes', () => {
     expect(body.profile.user).toBe('MaxMilyin')
     expect(body.awards[0].isHardcore).toBe(true)
     expect(body.recentGames[0].numAwardedHardcore).toBe(16)
+    expect(body.gamesTotal).toBe(1629)
   })
 
   it('GET /api/users/:user maps a site award that has no game', async () => {
@@ -241,7 +243,8 @@ describe('internal routes', () => {
 
     const response = await createApp().request('/api/users/MaxMilyin')
     const body = await response.json()
-    const [event, legend] = body.awards
+    // Les awards sont tries du plus recent au plus ancien.
+    const [legend, event] = body.awards
 
     expect(legend.gameId).toBeNull()
     expect(legend.title).toBe('Certified Legend')
@@ -249,6 +252,79 @@ describe('internal routes', () => {
     expect(legend.isHardcore).toBe(false)
     expect(event.gameId).toBe(139)
     expect(event.isHardcore).toBe(false)
+  })
+
+  it('GET /api/users/:user/suggestions ranks easy locked achievements first', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = new URL(String(input))
+      const endpoint = url.pathname.replace('/API/API_', '').replace('.php', '')
+
+      if (endpoint === 'GetUserCompletionProgress') {
+        return new Response(
+          JSON.stringify({
+            Results: [
+              // Termine : rien a suggerer.
+              { GameID: 1, Title: 'Done', ImageIcon: '/a.png', ConsoleID: 1, ConsoleName: 'X', MaxPossible: 10, NumAwarded: 10, NumAwardedHardcore: 10, MostRecentAwardedDate: null, HighestAwardKind: 'mastered' },
+              // Jamais touche : ce n'est pas une reprise.
+              { GameID: 2, Title: 'Untouched', ImageIcon: '/b.png', ConsoleID: 1, ConsoleName: 'X', MaxPossible: 10, NumAwarded: 0, NumAwardedHardcore: 0, MostRecentAwardedDate: null, HighestAwardKind: null },
+              // En cours : le seul candidat.
+              { GameID: 3, Title: 'In progress', ImageIcon: '/c.png', ConsoleID: 1, ConsoleName: 'X', MaxPossible: 10, NumAwarded: 7, NumAwardedHardcore: 7, MostRecentAwardedDate: null, HighestAwardKind: null },
+            ],
+          }),
+          { status: 200 },
+        )
+      }
+
+      if (endpoint === 'GetGameInfoAndUserProgress') {
+        expect(url.searchParams.get('g')).toBe('3')
+        return new Response(
+          JSON.stringify({
+            ...SONIC_RAW,
+            NumDistinctPlayers: 100,
+            Achievements: {
+              '1': { ...RAW_ACHIEVEMENT, ID: 1, NumAwarded: 90, Points: 5, DateEarned: '2026-01-01 00:00:00' },
+              '2': { ...RAW_ACHIEVEMENT, ID: 2, NumAwarded: 80, Points: 10 },
+              '3': { ...RAW_ACHIEVEMENT, ID: 3, NumAwarded: 5, Points: 50 },
+            },
+          }),
+          { status: 200 },
+        )
+      }
+
+      return new Response('', { status: 404 })
+    })
+
+    const response = await createApp().request('/api/users/MaxMilyin/suggestions')
+    const body = await response.json()
+
+    // L'achievement deja obtenu est exclu ; le plus repandu passe devant le plus rare.
+    expect(body.map((entry: { id: number }) => entry.id)).toEqual([2, 3])
+    expect(body[0].gameTitle).toBe('In progress')
+    expect(body[0].gameAwarded).toBe(7)
+    expect(body[0].gamePossible).toBe(10)
+  })
+
+  it('GET /api/users/:user/suggestions survives an unreachable game', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = new URL(String(input))
+      const endpoint = url.pathname.replace('/API/API_', '').replace('.php', '')
+      if (endpoint === 'GetUserCompletionProgress') {
+        return new Response(
+          JSON.stringify({
+            Results: [
+              { GameID: 3, Title: 'Broken', ImageIcon: '/c.png', ConsoleID: 1, ConsoleName: 'X', MaxPossible: 10, NumAwarded: 7, NumAwardedHardcore: 7, MostRecentAwardedDate: null, HighestAwardKind: null },
+            ],
+          }),
+          { status: 200 },
+        )
+      }
+      return new Response('', { status: 500 })
+    })
+
+    const response = await createApp().request('/api/users/MaxMilyin/suggestions')
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual([])
   })
 
   it('GET /api/users/:user returns 404 for an unknown player', async () => {
@@ -338,20 +414,18 @@ describe('internal routes', () => {
   })
 
   it('GET /api/home degrades to empty highlights when the upstream extras fail', async () => {
-    mockRa({ GetTopTenUsers: [{ '1': 'Sarconius', '2': 1, '3': 2 }] })
+    mockRa({})
 
     const response = await createApp().request('/api/home')
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(body.topUsers).toHaveLength(1)
     expect(body.achievementOfTheWeek).toBeNull()
     expect(body.recentAwards).toEqual([])
   })
 
   it('GET /api/home maps the achievement of the week', async () => {
     mockRa({
-      GetTopTenUsers: [],
       GetAchievementOfTheWeek: {
         Achievement: {
           ID: 31931,

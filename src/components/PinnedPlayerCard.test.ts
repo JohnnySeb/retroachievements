@@ -22,6 +22,7 @@ const PROFILE = {
   },
   awards: [],
   awardsTotal: 0,
+  gamesTotal: 1629,
   recentGames: [],
 }
 
@@ -67,6 +68,22 @@ describe('PinnedPlayerCard', () => {
 
     expect(wrapper.get('[data-pinned-card]').text()).toContain('MaxMilyin')
     expect(wrapper.text()).toContain('Go to this profile')
+  })
+
+  it('shows softcore before points, then true points and games played', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(PROFILE), { status: 200 }),
+    )
+    usePinnedPlayerStore().pin('MaxMilyin')
+
+    const wrapper = mountCard()
+    await settle()
+    const text = wrapper.get('[data-pinned-card]').text().replace(/\s+/g, ' ')
+
+    expect(text).toContain('0 softcore')
+    expect(text).toContain('491,867 points')
+    expect(text).toContain('1,629 games played')
+    expect(text.indexOf('softcore')).toBeLessThan(text.indexOf('points'))
   })
 
   it('still offers the profile link when the API fails', async () => {

@@ -1,13 +1,15 @@
 import { Hono } from 'hono'
 
 import type {
+  Achievement,
   PlayerAward,
   PlayerGameProgress,
   PlayerProgressPayload,
   RecentUnlock,
+  SuggestedUnlock,
 } from '../../src/lib/types'
 import { TTL, cached, cachedWithMeta } from '../cache'
-import { type RaUserProfile, normalizePlayerProfile } from '../normalize'
+import { type RaGameExtended, normalizeAchievement, type RaUserProfile, normalizePlayerProfile } from '../normalize'
 import { fetchRa, fetchRaOrNull } from '../ra-client'
 
 // MaxMilyin a plus de 2000 awards : tout renvoyer produit 430 Ko de JSON.
@@ -71,11 +73,16 @@ usersRoutes.get('/users/:user', async (context) => {
     const raw = await fetchRaOrNull<RaUserProfile>('GetUserProfile', { u: user })
     if (!raw?.User) return null
 
-    const [awardsRaw, recentRaw] = await Promise.all([
+    const [awardsRaw, recentRaw, countRaw] = await Promise.all([
       fetchRa<{ VisibleUserAwards?: RaAward[]; TotalAwardsCount?: number }>('GetUserAwards', {
         u: user,
       }),
       fetchRa<RaRecentGame[]>('GetUserRecentlyPlayedGames', { u: user, c: 12 }),
+      // c=1 : on ne veut que le Total, pas les 500 entrees de la liste.
+      // Ce compteur est accessoire : son echec ne doit pas emporter tout le profil.
+      fetchRa<{ Total?: number }>('GetUserCompletionProgress', { u: user, c: 1 }).catch(
+        (): { Total?: number } => ({}),
+      ),
     ])
 
     const allAwards = awardsRaw?.VisibleUserAwards ?? []
@@ -114,6 +121,7 @@ usersRoutes.get('/users/:user', async (context) => {
       profile: normalizePlayerProfile(raw),
       awards,
       awardsTotal: awardsRaw?.TotalAwardsCount ?? allAwards.length,
+      gamesTotal: countRaw?.Total ?? 0,
       recentGames,
     }
   })
@@ -184,4 +192,71 @@ usersRoutes.get('/users/:user/recent', async (context) => {
   })
 
   return context.json(unlocks)
+})
+
+// Nombre de jeux interroges pour batir des suggestions. Chaque jeu coute un appel
+// amont : au-dela, on paierait cher une liste que personne ne fait defiler.
+const SUGGESTION_GAMES = 8
+const SUGGESTION_LIMIT = 30
+
+interface RaGameProgressLite extends RaGameExtended {
+  NumAwardedToUser: number
+}
+
+usersRoutes.get('/users/:user/suggestions', async (context) => {
+  const user = context.req.param('user')
+
+  const suggestions = await cached(
+    `user-suggestions:${user}`,
+    TTL.user,
+    async (): Promise<SuggestedUnlock[]> => {
+      const raw = await fetchRa<{ Results?: RaCompletionEntry[] }>('GetUserCompletionProgress', {
+        u: user,
+        c: 500,
+      })
+
+      // Un jeu deja fini n'offre rien ; un jeu jamais touche n'est pas une reprise.
+      // Les jeux les plus avances viennent en premier : ce sont les gains les plus proches.
+      const candidates = (raw?.Results ?? [])
+        .filter((entry) => entry.NumAwarded > 0 && entry.NumAwarded < entry.MaxPossible)
+        .sort((a, b) => b.NumAwarded / b.MaxPossible - a.NumAwarded / a.MaxPossible)
+        .slice(0, SUGGESTION_GAMES)
+
+      const perGame = await Promise.all(
+        candidates.map(async (entry): Promise<SuggestedUnlock[]> => {
+          try {
+            const game = await fetchRa<RaGameProgressLite>('GetGameInfoAndUserProgress', {
+              g: entry.GameID,
+              u: user,
+              a: 1,
+            })
+
+            return Object.values(game?.Achievements ?? {})
+              .map((row) => normalizeAchievement(row, game.NumDistinctPlayers))
+              .filter((achievement: Achievement) => !achievement.dateEarned)
+              .map((achievement) => ({
+                ...achievement,
+                gameId: entry.GameID,
+                gameTitle: entry.Title,
+                gameIconPath: entry.ImageIcon,
+                gameAwarded: entry.NumAwarded,
+                gamePossible: entry.MaxPossible,
+              }))
+          } catch {
+            // Un jeu injoignable ne doit pas vider toute la liste de suggestions.
+            return []
+          }
+        }),
+      )
+
+      // Le taux de deblocage global est le meilleur indicateur de facilite dont
+      // dispose l'API : plus de monde l'a obtenu, moins il est exigeant.
+      return perGame
+        .flat()
+        .sort((a, b) => b.unlockRate - a.unlockRate || a.points - b.points)
+        .slice(0, SUGGESTION_LIMIT)
+    },
+  )
+
+  return context.json(suggestions)
 })

@@ -35,9 +35,14 @@ const profile = computed(() => data.value?.profile ?? null)
     <div class="min-w-0 flex-1">
       <p class="tag text-phosphor">Pinned player</p>
       <p class="mt-2 truncate font-display text-xl font-bold uppercase">{{ pinned.username }}</p>
-      <p v-if="profile" class="num mt-1 text-xs text-muted">
-        {{ formatNumber(profile.totalPoints) }} points ·
-        {{ formatNumber(profile.totalTruePoints) }} true points
+      <p v-if="data" class="num mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+        <span><b class="font-normal text-amber">{{ formatNumber(profile!.totalSoftcorePoints) }}</b> softcore</span>
+        <span aria-hidden="true">·</span>
+        <span><b class="font-normal text-phosphor">{{ formatNumber(profile!.totalPoints) }}</b> points</span>
+        <span aria-hidden="true">·</span>
+        <span><b class="font-normal text-ink">{{ formatNumber(profile!.totalTruePoints) }}</b> true points</span>
+        <span aria-hidden="true">·</span>
+        <span><b class="font-normal text-ink">{{ formatNumber(data.gamesTotal) }}</b> games played</span>
       </p>
       <p v-if="profile?.richPresence" class="mt-1 truncate text-xs text-cyan">
         {{ profile.richPresence }}

@@ -2,7 +2,8 @@
 import { computed, ref } from 'vue'
 
 import AwardWall from '@/components/AwardWall.vue'
-import GameProgressCard from '@/components/GameProgressCard.vue'
+import AppIcon from '@/components/AppIcon.vue'
+import PlayerGameRow from '@/components/PlayerGameRow.vue'
 import PlayerHero from '@/components/PlayerHero.vue'
 import PlayerStats from '@/components/PlayerStats.vue'
 import SkeletonBlock from '@/components/SkeletonBlock.vue'
@@ -11,9 +12,14 @@ import StateEmpty from '@/components/StateEmpty.vue'
 import StateError from '@/components/StateError.vue'
 import TabStrip from '@/components/TabStrip.vue'
 import { useApi } from '@/composables/useApi'
-import { formatDate, formatNumber } from '@/lib/format'
-import { badgeUrl } from '@/lib/media'
-import type { PlayerProgressPayload, PlayerSummary, RecentUnlock } from '@/lib/types'
+import { formatDate, formatNumber, formatPercent } from '@/lib/format'
+import { badgeUrl, mediaUrl } from '@/lib/media'
+import type {
+  PlayerProgressPayload,
+  PlayerSummary,
+  RecentUnlock,
+  SuggestedUnlock,
+} from '@/lib/types'
 import { usePinnedPlayerStore } from '@/stores/usePinnedPlayerStore'
 
 const props = defineProps<{ username: string }>()
@@ -23,6 +29,7 @@ const activeTab = ref('games')
 
 const TABS = [
   { value: 'games', label: 'Games' },
+  { value: 'suggested', label: 'Suggested' },
   { value: 'recent', label: 'Activity' },
   { value: 'achievements', label: 'Achievements' },
   { value: 'awards', label: 'Awards' },
@@ -34,6 +41,14 @@ const progress = useApi<PlayerProgressPayload>(
 )
 const recent = useApi<RecentUnlock[]>(
   () => `/api/users/${encodeURIComponent(props.username)}/recent`,
+)
+
+// Les suggestions coutent plusieurs appels amont : on ne les charge qu'a l'ouverture
+// de l'onglet, pas au chargement du profil.
+const suggestions = useApi<SuggestedUnlock[]>(() =>
+  activeTab.value === 'suggested'
+    ? `/api/users/${encodeURIComponent(props.username)}/suggestions`
+    : null,
 )
 
 const playedGames = computed(() => progress.data.value?.results ?? [])
@@ -93,17 +108,89 @@ const isPinned = computed(() => pinned.username?.toLowerCase() === props.usernam
         </p>
         <ul class="grid grid-cols-1 gap-2">
           <li v-for="game in playedGames" :key="game.gameId">
-            <GameProgressCard :game="game" />
+            <PlayerGameRow :game="game" :username="username" />
           </li>
         </ul>
       </template>
+    </section>
+
+    <section v-else-if="activeTab === 'suggested'" class="mt-4">
+      <p class="mb-3 max-w-prose text-xs text-muted">
+        Locked achievements from the games closest to completion, most commonly unlocked first —
+        the likeliest quick wins.
+      </p>
+
+      <div v-if="suggestions.pending.value" class="grid grid-cols-1 gap-2">
+        <SkeletonBlock v-for="n in 5" :key="n" height="76px" />
+      </div>
+
+      <StateError
+        v-else-if="suggestions.error.value"
+        :message="suggestions.error.value.message"
+        @retry="suggestions.reload()"
+      />
+
+      <StateEmpty
+        v-else-if="!suggestions.data.value?.length"
+        title="Nothing to suggest"
+        hint="Every started game is either finished or has no locked achievement left."
+      />
+
+      <ul v-else class="grid grid-cols-1 gap-2">
+        <li
+          v-for="entry in suggestions.data.value"
+          :key="`${entry.gameId}-${entry.id}`"
+          class="border border-l-[3px] border-edge border-l-cyan bg-surface p-3"
+        >
+          <div class="flex items-start gap-3">
+            <img
+              :src="badgeUrl(entry.badgeName, false)"
+              :alt="`Locked badge: ${entry.title}`"
+              width="48"
+              height="48"
+              loading="lazy"
+              class="is-pixel size-12 shrink-0 border border-edge brightness-[.8]"
+            />
+            <div class="min-w-0 flex-1">
+              <h3 class="truncate font-display text-base">{{ entry.title }}</h3>
+              <p class="line-clamp-2 text-xs text-muted">{{ entry.description }}</p>
+              <p class="num mt-1 text-[11px] text-phosphor">
+                {{ formatPercent(entry.unlockRate) }} of players have it
+              </p>
+            </div>
+            <p class="num shrink-0 text-right text-sm font-bold text-amber">
+              {{ entry.points }}
+              <span class="tag block font-normal text-muted">PTS</span>
+            </p>
+          </div>
+
+          <RouterLink
+            :to="{ name: 'game', params: { gameId: entry.gameId } }"
+            class="mt-3 flex min-h-11 items-center gap-2 border-t border-edge pt-2 text-xs text-muted"
+          >
+            <img
+              :src="mediaUrl(entry.gameIconPath)"
+              alt=""
+              width="20"
+              height="20"
+              loading="lazy"
+              class="is-pixel size-5 shrink-0 border border-edge"
+            />
+            <span class="min-w-0 truncate">{{ entry.gameTitle }}</span>
+            <span class="num ml-auto shrink-0">
+              {{ entry.gameAwarded }}/{{ entry.gamePossible }}
+            </span>
+            <AppIcon name="chevron" class="size-4 shrink-0 -rotate-90" />
+          </RouterLink>
+        </li>
+      </ul>
     </section>
 
     <section v-else-if="activeTab === 'recent'" class="mt-4">
       <StateEmpty v-if="!summary.data.value.recentGames.length" title="No recent activity" />
       <ul v-else class="grid grid-cols-1 gap-2">
         <li v-for="game in summary.data.value.recentGames" :key="game.gameId">
-          <GameProgressCard :game="game" />
+          <PlayerGameRow :game="game" :username="username" />
         </li>
       </ul>
     </section>

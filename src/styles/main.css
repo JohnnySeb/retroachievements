@@ -72,6 +72,25 @@
 }
 
 /* Un raccourci clavier n'a aucun sens sans clavier. */
+/* Un anneau en surimpression dont l'opacite suit --glow, pose par useProximityGlow.
+   Pas de color-mix : Lightning CSS en genere un repli qui allume la bordure en
+   permanence. Le survol garde la main sans JavaScript. */
+@layer components {
+  .glow-ring {
+    position: absolute;
+    inset: -1px;
+    border: 1px solid var(--color-phosphor);
+    opacity: var(--glow, 0);
+    pointer-events: none;
+    transition: opacity 120ms linear;
+  }
+
+  .glow-card:hover .glow-ring,
+  .glow-card:focus-visible .glow-ring {
+    opacity: 1;
+  }
+}
+
 @media (pointer: coarse) {
   .kbd-hint {
     display: none;

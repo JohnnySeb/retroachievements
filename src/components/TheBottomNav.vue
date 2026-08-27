@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import AppIcon from '@/components/AppIcon.vue'
+import { useNavDestinations } from '@/composables/useNavDestinations'
 
 defineEmits<{ 'open-search': [] }>()
 
-const destinations = [
-  { name: 'home', label: 'Home', icon: 'home' },
-  { name: 'systems', label: 'Systems', icon: 'systems' },
-  { name: 'leaderboards', label: 'Ranks', icon: 'ranks' },
-] as const
+const destinations = useNavDestinations()
 </script>
 
 <template>
@@ -20,9 +17,16 @@ const destinations = [
       :key="destination.name"
       :to="{ name: destination.name }"
       data-nav-item
-      class="flex min-h-11 flex-col items-center justify-center gap-1 py-2 text-muted"
-      active-class="text-phosphor"
+      :data-active="destination.isActive ? '' : undefined"
+      :aria-current="destination.isActive ? 'page' : undefined"
+      class="relative flex min-h-11 flex-col items-center justify-center gap-1 py-2"
+      :class="destination.isActive ? 'text-phosphor' : 'text-muted'"
     >
+      <span
+        v-if="destination.isActive"
+        aria-hidden="true"
+        class="absolute inset-x-3 top-0 h-0.5 bg-phosphor"
+      />
       <AppIcon :name="destination.icon" />
       <span class="tag">{{ destination.label }}</span>
     </RouterLink>

@@ -26,10 +26,7 @@ const awardLabel = computed(() =>
 </script>
 
 <template>
-  <RouterLink
-    :to="{ name: 'game', params: { gameId: game.gameId } }"
-    class="flex items-center gap-3 border border-edge bg-surface p-3"
-  >
+  <div class="flex min-w-0 flex-1 items-center gap-3">
     <img
       :src="mediaUrl(game.iconPath)"
       alt=""
@@ -69,5 +66,5 @@ const awardLabel = computed(() =>
     </div>
 
     <p class="num shrink-0 text-sm text-muted">{{ game.numAwarded }}/{{ game.maxPossible }}</p>
-  </RouterLink>
+  </div>
 </template>

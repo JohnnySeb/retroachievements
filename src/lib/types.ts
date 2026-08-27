@@ -38,6 +38,15 @@ export interface RecentUnlock extends Achievement {
   gameTitle: string
 }
 
+export interface SuggestedUnlock extends Achievement {
+  gameId: number
+  gameTitle: string
+  gameIconPath: string
+  /** Achievements deja obtenus par le joueur sur ce jeu, sur le total du set. */
+  gameAwarded: number
+  gamePossible: number
+}
+
 export interface GameDetail {
   id: number
   title: string
@@ -158,6 +167,7 @@ export interface PlayerSummary {
   profile: PlayerProfile
   awards: PlayerAward[]
   awardsTotal: number
+  gamesTotal: number
   recentGames: PlayerGameProgress[]
 }
 
@@ -167,7 +177,6 @@ export interface PlayerProgressPayload {
 }
 
 export interface HomePayload {
-  topUsers: LeaderboardUser[]
   achievementOfTheWeek: AchievementOfTheWeek | null
   recentAwards: RecentAward[]
 }

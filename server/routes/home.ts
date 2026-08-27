@@ -8,7 +8,6 @@ import type {
 } from '../../src/lib/types'
 import { TTL, cached } from '../cache'
 import { fetchRa } from '../ra-client'
-import { loadTopUsers } from './leaderboards'
 
 interface RaAotw {
   Achievement?: {
@@ -66,9 +65,8 @@ export const homeRoutes = new Hono()
 
 homeRoutes.get('/home', async (context) => {
   const payload = await cached('home', TTL.home, async (): Promise<HomePayload> => {
-    const [topUsers, aotwRaw, awardsRaw] = await Promise.all([
-      loadTopUsers(),
-      // Ces deux appels ne doivent pas faire echouer l'accueil : chacun degrade en valeur vide.
+    // Ces deux appels ne doivent pas faire echouer l'accueil : chacun degrade en valeur vide.
+    const [aotwRaw, awardsRaw] = await Promise.all([
       fetchRa<RaAotw>('GetAchievementOfTheWeek', {}).catch(() => ({}) as RaAotw),
       fetchRa<{ Results?: RaRecentAward[] }>('GetRecentGameAwards', { c: 12 }).catch(
         (): { Results?: RaRecentAward[] } => ({}),
@@ -86,7 +84,7 @@ homeRoutes.get('/home', async (context) => {
       }),
     )
 
-    return { topUsers, achievementOfTheWeek: toAchievementOfTheWeek(aotwRaw), recentAwards }
+    return { achievementOfTheWeek: toAchievementOfTheWeek(aotwRaw), recentAwards }
   })
 
   return context.json(payload)

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import PinnedPlayerCard from '@/components/PinnedPlayerCard.vue'
-import SkeletonBlock from '@/components/SkeletonBlock.vue'
 import SystemCard from '@/components/SystemCard.vue'
 import { useApi } from '@/composables/useApi'
 import { formatDate, formatNumber } from '@/lib/format'
@@ -106,29 +105,6 @@ const AWARD_TEXT: Record<string, string> = {
         <p class="num text-[11px] text-muted">{{ formatDate(award.awardDate) }}</p>
       </RouterLink>
     </div>
-  </section>
-
-  <section class="mt-8">
-    <h2 class="font-display text-xl uppercase tracking-wide">Top players</h2>
-    <div v-if="home.pending.value" class="mt-3 grid grid-cols-1 gap-2">
-      <SkeletonBlock v-for="n in 5" :key="n" height="48px" />
-    </div>
-    <ol v-else class="mt-3 grid grid-cols-1 gap-2">
-      <li
-        v-for="entry in home.data.value?.topUsers ?? []"
-        :key="entry.user"
-        class="flex items-center gap-3 border border-edge bg-surface p-3"
-      >
-        <span class="num w-8 shrink-0 font-bold text-phosphor">{{ entry.rank }}</span>
-        <RouterLink
-          :to="{ name: 'player', params: { username: entry.user } }"
-          class="flex min-h-11 min-w-0 flex-1 items-center truncate font-display text-lg"
-        >
-          {{ entry.user }}
-        </RouterLink>
-        <span class="num shrink-0 text-sm text-muted">{{ formatNumber(entry.totalPoints) }}</span>
-      </li>
-    </ol>
   </section>
 
   <section class="mt-8">

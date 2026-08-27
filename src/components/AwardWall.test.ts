@@ -75,6 +75,33 @@ describe('AwardWall', () => {
     expect(softcore.html()).toContain('border-l-amber')
   })
 
+  it('groups awards by category, hardest first', () => {
+    const wrapper = mountWall([
+      makeAward({ awardType: 'Event', title: 'Four Job Fiesta', gameId: 124 }),
+      makeAward({ awardType: 'Mastery/Completion', title: 'Kid Dracula' }),
+      makeAward({ awardType: 'Game Beaten', title: 'Mega Man', gameId: 1448 }),
+      makeAward({ awardType: 'Mastery/Completion', title: 'Sonic', gameId: 1 }),
+    ])
+    const groups = wrapper.findAll('[data-award-group]')
+
+    expect(groups.map((g) => g.get('.tag').text())).toEqual([
+      'Mastery/Completion',
+      'Game Beaten',
+      'Event',
+    ])
+    expect(groups[0]!.findAll('li')).toHaveLength(2)
+  })
+
+  it('places an unknown award type last rather than dropping it', () => {
+    const wrapper = mountWall([
+      makeAward({ awardType: 'Brand New Thing', gameId: null }),
+      makeAward({ awardType: 'Game Beaten', gameId: 1448 }),
+    ])
+    const groups = wrapper.findAll('[data-award-group]')
+
+    expect(groups.map((g) => g.get('.tag').text())).toEqual(['Game Beaten', 'Brand New Thing'])
+  })
+
   it('keys rows without collapsing site awards that share a null game', () => {
     const wrapper = mountWall([
       makeAward({ gameId: null, awardedAt: '2024-01-01T00:00:00+00:00', title: 'A' }),

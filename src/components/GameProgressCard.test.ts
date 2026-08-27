@@ -1,4 +1,4 @@
-import { RouterLinkStub, mount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import GameProgressCard from './GameProgressCard.vue'
@@ -21,10 +21,7 @@ function makeGame(overrides: Partial<PlayerGameProgress> = {}): PlayerGameProgre
 }
 
 function mountCard(game: PlayerGameProgress) {
-  return mount(GameProgressCard, {
-    props: { game },
-    global: { stubs: { RouterLink: RouterLinkStub } },
-  })
+  return mount(GameProgressCard, { props: { game } })
 }
 
 describe('GameProgressCard', () => {
